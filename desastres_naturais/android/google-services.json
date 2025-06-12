@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "600823825200",
+    "project_id": "desastres-enchentes",
+    "storage_bucket": "desastres-enchentes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600823825200:android:6b261930e5dd1aae83fef5",
+        "android_client_info": {
+          "package_name": "com.daniel.ajudaenchentes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBacXH3zbUR5KQ3_YYRCfvyM0GIHNYJidU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

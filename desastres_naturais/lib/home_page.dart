@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'pages/danger_page.dart';
+import 'pages/calm_page.dart';
+import 'pages/tips_page.dart';
+import 'pages/contacts_page.dart'; 
+import 'pages/map_page.dart';  
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -22,7 +27,10 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.warning),
               label: const Text('Estou em perigo'),
               onPressed: () {
-                // Criar nova tela 
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DangerPage()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -34,7 +42,10 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.spa),
               label: const Text('Preciso me acalmar'),
               onPressed: () {
-                // Criar nova tela 
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CalmPage()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
@@ -46,13 +57,48 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.info),
               label: const Text('Dicas de segurança'),
               onPressed: () {
-                // Criar nova tela 
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TipsPage()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
+            const SizedBox(height: 15),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.contacts),
+              label: const Text('Contatos de confiança'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ContactsPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+            const SizedBox(height: 15),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.map),
+              label: const Text('Ver mapa'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MapPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+
+
           ],
         ),
       ),
