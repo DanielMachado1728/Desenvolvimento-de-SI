@@ -3,7 +3,8 @@ import 'pages/danger_page.dart';
 import 'pages/calm_page.dart';
 import 'pages/tips_page.dart';
 import 'pages/contacts_page.dart'; 
-import 'pages/map_page.dart';  
+import 'pages/map_page.dart';
+import 'settings_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -11,7 +12,22 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajuda em Enchentes')),
+      appBar: AppBar(
+        title: const Text('ArkApp'),
+        actions: [ 
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Configurações',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
+        ],
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -97,8 +113,6 @@ class HomePage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
-
-
           ],
         ),
       ),
