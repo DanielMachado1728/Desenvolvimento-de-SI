@@ -34,8 +34,10 @@ dependencies:
   cloud_firestore: ^4.14.0
   firebase_auth: ^4.20.0 # ou a versão mais recente
   intl: ^0.18.1
+  google_maps_flutter: ^2.6.0
   #lucide_flutter: ^0.257.0
   #url_launcher: 6.1.14
+
 
 
 
