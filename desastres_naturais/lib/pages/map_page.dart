@@ -188,8 +188,8 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSelectingLocation ? 'Escolha o Local' : 'Mapa de Desastres'),
-        backgroundColor: _isSelectingLocation ? Colors.orange : Colors.blue,
+        title: Text(_isSelectingLocation ? 'Escolha o Local' : 'Mapa'),
+        backgroundColor: _isSelectingLocation ? Colors.orange : Colors.purple,
         leading: _isSelectingLocation 
           ? IconButton(
               icon: const Icon(Icons.close),
