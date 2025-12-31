@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/map_marker_model.dart';
 
 
-
 class MapMarkerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
