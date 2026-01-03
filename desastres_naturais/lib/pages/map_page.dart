@@ -1,6 +1,6 @@
 import 'dart:async'; // Adicionado para StreamSubscription
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Adicionado para Auth
+import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -58,7 +58,7 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  // --- 1. Localização do Usuário ---
+  // Localização do Usuário
 
   Future<void> _getUserLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -104,7 +104,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   
-  // --- 2. Ler Relatórios (Seu código original adaptado) ---
+  // Ler Relatórios
   
   void _listenFirestoreMarkers() {
     _markerService.streamMarkers().listen((markersFromFirestore) {
@@ -252,7 +252,7 @@ class _MapPageState extends State<MapPage> {
                final marker = Marker(
                 markerId: MarkerId('SOS_$uid'), // Prefixo SOS para não confundir ID
                 position: LatLng(lat, lng),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet), // VIOLETA!
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet), 
                 zIndex: 3, // Fica por cima de tudo
                 infoWindow: InfoWindow(
                   title: 'PEDIDO DE SOCORRO',
@@ -337,14 +337,14 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  // --- UI (Seu código original mantido) ---
+  // UI
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isSelectingLocation ? 'Escolha o Local' : 'Mapa'),
-        backgroundColor: _isSelectingLocation ? Colors.orange : Colors.white, // Mudei pra branco pra ficar clean
+        backgroundColor: _isSelectingLocation ? Colors.orange : Colors.white, 
         elevation: 0,
         titleTextStyle: TextStyle(
             color: _isSelectingLocation ? Colors.white : Colors.black87, 
@@ -421,7 +421,7 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-// Widget do formulário (Mantido igual, apenas copiando para garantir integridade)
+// Widget do formulário 
 class _FormularioAlerta extends StatefulWidget {
   final LatLng localizacao;
   final Function(String, String, LatLng) onSalvar;
