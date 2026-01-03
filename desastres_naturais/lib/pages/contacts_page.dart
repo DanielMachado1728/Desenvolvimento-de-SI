@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'add_contact_page.dart'; 
 //import 'package:url_launcher/url_launcher.dart'; usar no futuro quando launcher estiver ok
 // import '../models/contact_model.dart'; // Mantido, mas não necessário neste widget
+
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -12,7 +14,8 @@ class ContactsPage extends StatefulWidget {
 }
 
 class _ContactsPageState extends State<ContactsPage> {
-  // Método de exclusão agora faz parte do State
+  
+  // Função de Deletar (Só funciona se o contato não for do sistema)
   Future<void> _deleteContact(String contactId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -25,421 +28,294 @@ class _ContactsPageState extends State<ContactsPage> {
     }
   }
 
-/*
-  // Função para ligar (melhoria de UX)
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber.replaceAll(RegExp(r'[^\d]'), ''), // Remove formatação
+  // Função de Navegar para Edição
+  void _editContact(String id, Map<String, dynamic> data) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddContactPage(contactId: id, contactData: data),
+      ),
     );
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
-    } else {
-      // Exibe um erro se não puder ligar
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível iniciar a chamada.')),
-      );
-    }
   }
-*/
 
+  // Função Simulada de Ligar
+  void _fazerLigacao(String nome, String numero) {
+    // Aqui entraria o url_launcher real. Por enquanto, mensagem simulada.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.phone_in_talk, color: Colors.white),
+            const SizedBox(width: 10),
+            Expanded(child: Text("Ligando para $nome ($numero)...")),
+          ],
+        ),
+        backgroundColor: Colors.green[700], // Verde telefone
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    // Tema Amarelo solicitado
+    final Color primaryColor = Colors.amber[900]!; 
+    final Color headerColor = Colors.amber;
 
     if (user == null) {
       return const Center(child: Text('Usuário não autenticado.'));
     }
 
     return Scaffold(
+      backgroundColor: Colors.grey[100], 
       appBar: AppBar(
         title: const Text(
           'Contatos de Confiança',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
         ),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: headerColor,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('usuarios')
             .doc(user.uid)
             .collection('contatos')
-            .orderBy('nome')
+            // Ordena para que os contatos do sistema (fixo=true) apareçam primeiro ou por nome
+            // Aqui mantive por nome para ficar organizado alfabeticamente
+            .orderBy('nome') 
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Erro ao carregar contatos'));
-          }
-
+          if (snapshot.hasError) return const Center(child: Text('Erro ao carregar contatos'));
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.amber));
           }
 
           final contatos = snapshot.data!.docs;
 
           if (contatos.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.person_add_alt_1,
-                      size: 60,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Nenhum contato cadastrado ainda.',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Adicione pessoas para contatá-las rapidamente em caso de emergência.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _buildEmptyState();
           }
 
-          // A lista de contatos agora usa um Padding para não tocar nas bordas
           return ListView.builder(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             itemCount: contatos.length,
             itemBuilder: (context, index) {
               final contato = contatos[index];
               final data = contato.data() as Map<String, dynamic>;
-              final phoneNumber = data['telefone'] ?? '';
+              
+              // --- A REGRA DE OURO ---
+              // Verificamos se é um contato do sistema (Bombeiros, SAMU, etc)
+              // No seu cadastro, você usou a chave 'fixo': true. Vamos usar ela.
+              final bool isSystemContact = data['fixo'] == true;
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Dismissible(
-                  key: Key(contato.id),
-                  direction: DismissDirection.endToStart,
-                  // Fundo mais visualmente agradável para exclusão
-                  background: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade700,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Excluir',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.delete_sweep, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                  confirmDismiss: (direction) async {
-                    // Adiciona uma confirmação (melhoria de UX/segurança)
-                    return await showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text("Confirmar Exclusão"),
-                          content: Text("Tem certeza que deseja remover ${data['nome'] ?? 'este contato'}?"),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text("Cancelar"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text("Excluir", style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  onDismissed: (_) async {
-                    await _deleteContact(contato.id);
-                    // Feedback mais claro
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${data['nome'] ?? 'Contato'} excluído com sucesso!')),
-                    );
-                  },
-                  child: Card(
-                    elevation: 3, // Adiciona sombra
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              // Widget visual do card
+              Widget cardContent = _buildContactCard(
+                id: contato.id, 
+                data: data, 
+                primaryColor: primaryColor, 
+                isSystem: isSystemContact
+              );
+
+              // LÓGICA DE BLOQUEIO
+              if (isSystemContact) {
+                // Se for Bombeiro/SAMU: Retorna APENAS o card (sem Dismissible/Swipe)
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: cardContent, 
+                );
+              } else {
+                // Se for contato comum: Envolve com Dismissible para permitir excluir
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: Dismissible(
+                    key: Key(contato.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade400,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          // Nome do Contato em destaque
-                          Row(
-                            children: [
-                              Icon(Icons.person, color: primaryColor, size: 24),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  data['nome'] ?? 'Sem nome',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                              ),
-                              if (phoneNumber.isNotEmpty) 
-                                IconButton(
-                                  icon: const Icon(Icons.call, color: Colors.grey),
-                                  tooltip: 'Ligação temporariamente desativada',
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar( 
-                                      const SnackBar(
-                                        content: Text(
-                                          'Funcionalidade de ligação temporariamente indisponível.',
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),                            
-                                
-                              /*
-                              // Botão de ligar (principal ação de emergência)
-                              if (phoneNumber.isNotEmpty)
-                                IconButton(
-                                  icon: const Icon(Icons.call, color: Colors.green),
-                                  onPressed: () => _makePhoneCall(phoneNumber),
-                                  tooltip: 'Ligar para ${data['nome']}',
-                                ),
-                              */
-
-                            ],
-                          ),
-                          const Divider(height: 16, thickness: 1), // Separador visual
-                          
-                          // Telefone
-                          _buildDetailRow(
-                            icon: Icons.phone_android,
-                            label: 'Telefone:',
-                            value: phoneNumber,
-                          ),
-                          
-                          // Detalhes Opcionais (com verificação de não-vazio)
-                          if (data['endereco'] != null && data['endereco'] != '')
-                            _buildDetailRow(
-                              icon: Icons.house,
-                              label: 'Endereço:',
-                              value: data['endereco'],
-                            ),
-                          if (data['relacao'] != null && data['relacao'] != '')
-                            _buildDetailRow(
-                              icon: Icons.group,
-                              label: 'Relação:',
-                              value: data['relacao'],
-                            ),
-                          if (data['observacao'] != null && data['observacao'] != '')
-                            _buildDetailRow(
-                              icon: Icons.info_outline,
-                              label: 'Observação:',
-                              value: data['observacao'],
-                              isObservation: true,
-                            ),
+                          Text('Excluir', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          SizedBox(width: 8),
+                          Icon(Icons.delete_sweep, color: Colors.white),
                         ],
                       ),
                     ),
+                    confirmDismiss: (direction) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text("Excluir Contato"),
+                          content: Text("Tem certeza que deseja remover ${data['nome']}?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: const Text("Cancelar"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: const Text("Excluir", style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    onDismissed: (_) => _deleteContact(contato.id),
+                    child: cardContent,
                   ),
-                ),
-              );
+                );
+              }
             },
           );
         },
       ),
-      // FloatingActionButton aprimorado
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/add_contact');
+          Navigator.push(
+            context, 
+            MaterialPageRoute(builder: (context) => const AddContactPage())
+          );
         },
         backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.person_add),
-        tooltip: 'Adicionar Contato',
+        child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );
   }
-  
-  // Widget helper para criar linhas de detalhe consistentes
-  Widget _buildDetailRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    bool isObservation = false,
+
+  // Widget do Card Visual
+  Widget _buildContactCard({
+    required String id, 
+    required Map<String, dynamic> data, 
+    required Color primaryColor, 
+    required bool isSystem,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: Colors.grey.shade600),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
+    return GestureDetector(
+      onTap: () {
+        if (isSystem) {
+          // BLOQUEIO DE EDIÇÃO: Se for sistema, avisa e não abre a tela de editar
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+              content: const Text('Este contato de emergência oficial não pode ser alterado.'),
+              backgroundColor: Colors.grey[800],
+              duration: const Duration(seconds: 2),
             ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontStyle: isObservation ? FontStyle.italic : FontStyle.normal,
-                color: isObservation ? Colors.orange.shade700 : Colors.black87,
+          );
+        } else {
+          // Se for comum, vai para a tela de editar
+          _editContact(id, data);
+        }
+      },
+      child: Card(
+        elevation: 2,
+        // Cor levemente diferente para contatos do sistema (Visual Hint)
+        color: isSystem ? const Color(0xFFFFF8E1) : Colors.white, 
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          // Borda dourada se for sistema
+          side: isSystem ? BorderSide(color: Colors.amber.shade300, width: 1) : BorderSide.none
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: isSystem ? Colors.amber[700] : Colors.amber[100],
+                    child: Icon(
+                      isSystem ? Icons.security : Icons.person, 
+                      color: isSystem ? Colors.white : primaryColor
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data['nome'] ?? 'Sem nome',
+                          style: TextStyle(
+                            fontSize: 18, 
+                            fontWeight: FontWeight.bold, 
+                            color: Colors.grey[800]
+                          ),
+                        ),
+                        if (data['relacao'] != null && data['relacao'] != '')
+                          Text(
+                            data['relacao'],
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                          ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Botão de Ligar (Funciona para todos)
+                  IconButton(
+                    icon: const Icon(Icons.phone, color: Colors.green),
+                    onPressed: () => _fazerLigacao(data['nome'] ?? 'Contato', data['telefone'] ?? ''),
+                  ),
+
+                  // Ícone indicativo
+                  if (isSystem)
+                    const Icon(Icons.lock, color: Colors.grey, size: 20) // Cadeado (Sistema)
+                  else
+                    const Icon(Icons.edit, color: Colors.amber, size: 20), // Lápis (Usuário)
+                ],
               ),
-              overflow: TextOverflow.ellipsis, // Evita estouro de texto
-              maxLines: isObservation ? 2 : 1,
-            ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Divider(),
+              ),
+              _buildInfoRow(Icons.phone, data['telefone'] ?? '', primaryColor),
+              if (data['endereco'] != null && data['endereco'] != '')
+                _buildInfoRow(Icons.location_on, data['endereco'], primaryColor),
+              if (data['observacao'] != null && data['observacao'] != '')
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    "Obs: ${data['observacao']}",
+                    style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[600], fontSize: 12),
+                  ),
+                ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.perm_contact_calendar_outlined, size: 80, color: Colors.amber[200]),
+          const SizedBox(height: 16),
+          const Text('Sua lista está vazia.', style: TextStyle(color: Colors.grey, fontSize: 18)),
         ],
       ),
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-/////// 2222222
-/*
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../models/contact_model.dart';
-
-class ContactsPage extends StatelessWidget {
-  const ContactsPage({super.key});
-
-  Future<void> _deleteContact(String contactId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(user.uid)
-          .collection('contatos')
-          .doc(contactId)
-          .delete();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return const Center(child: Text('Usuário não autenticado.'));
-    }
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Contatos de Confiança')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('usuarios')
-            .doc(user.uid)
-            .collection('contatos')
-            .orderBy('nome')
-            .snapshots(),
-
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Erro ao carregar contatos'));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final contatos = snapshot.data!.docs;
-
-          if (contatos.isEmpty) {
-            return const Center(child: Text('Nenhum contato cadastrado ainda.'));
-          }
-
-          return ListView.builder(
-            itemCount: contatos.length,
-            itemBuilder: (context, index) {
-              final contato = contatos[index];
-              final data = contato.data() as Map<String, dynamic>;
-
-              return Dismissible(
-                key: Key(contato.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Icon(Icons.delete, color: Colors.white),
-                ),
-                onDismissed: (_) async {
-                  await _deleteContact(contato.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Contato excluído')),
-                  );
-                },
-                child: ListTile(
-                  title: Text(data['nome'] ?? 'Sem nome'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Telefone: ${data['telefone'] ?? '-'}'),
-                      if (data['endereco'] != null && data['endereco'] != '')
-                        Text('Endereço: ${data['endereco']}'),
-                      if (data['relacao'] != null && data['relacao'] != '')
-                        Text('Relação: ${data['relacao']}'),
-                      if (data['observacao'] != null && data['observacao'] != '')
-                        Text('Obs: ${data['observacao']}'),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/add_contact');
-
-          //Navigator.push(
-          //context,
-          //MaterialPageRoute(builder: (context) => const AddContactPage()),
-          //);
-
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Adicionar Contato',
-      ),
-      
-    );
-  }
-}
-*/

@@ -7,7 +7,7 @@ void main() {
   ));
 }
 
-// --- MODELO DE DADOS (OO) ---
+
 class DicaSeguranca {
   final String titulo;
   final String conteudo;
