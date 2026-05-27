@@ -402,7 +402,7 @@ class _MapPageState extends State<MapPage> {
         onPressed: _isSelectingLocation 
             ? _confirmarLocalEabrirFormulario 
             : _iniciarSelecaoLocal,
-        label: Text(_isSelectingLocation ? 'CONFIRMAR AQUI' : 'REPORTAR PERIGO'),
+        label: Text(_isSelectingLocation ? 'CONFIRMAR AQUI' : 'COMPARTILHAR EVENTO'),
         icon: Icon(_isSelectingLocation ? Icons.check : Icons.add_alert),
         backgroundColor: _isSelectingLocation ? Colors.green : Colors.redAccent,
       ),
