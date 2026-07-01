@@ -68,7 +68,23 @@ class _ContactsPageState extends State<ContactsPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[100], 
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: const Text(
+          'Contatos de Confiança',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), 
+      ),
+      
+      
+      
+      
+      
+      /*
       appBar: AppBar(
         title: const Text(
           'Contatos de Confiança',
@@ -78,6 +94,9 @@ class _ContactsPageState extends State<ContactsPage> {
         iconTheme: const IconThemeData(color: Colors.black87),
         elevation: 0,
       ),
+      */
+
+
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('usuarios')
@@ -106,9 +125,9 @@ class _ContactsPageState extends State<ContactsPage> {
               final contato = contatos[index];
               final data = contato.data() as Map<String, dynamic>;
               
-              // --- A REGRA DE OURO ---
-              // Verificamos se é um contato do sistema (Bombeiros, SAMU, etc)
-              // No seu cadastro, você usou a chave 'fixo': true. Vamos usar ela.
+            
+              // Verifica se é um contato do sistema (Bombeiros, SAMU, etc)
+              // No cadastro, foi usado a chave 'fixo': true.
               final bool isSystemContact = data['fixo'] == true;
 
               // Widget visual do card

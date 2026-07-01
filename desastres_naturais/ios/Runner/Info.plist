@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<key>NSCameraUsageDescription</key>
+	<string>O aplicativo precisa de acesso à câmera para que você possa anexar fotos aos alertas de perigo no mapa.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O aplicativo precisa de acesso à galeria para que você possa escolher fotos dos incidentes.</string>
 </dict>
 </plist>

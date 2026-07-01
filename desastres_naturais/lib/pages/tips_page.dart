@@ -101,6 +101,18 @@ class _SafetyTipsPageState extends State<SafetyTipsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F8),
       appBar: AppBar(
+        title: const Text(
+          'Dicas de Segurança',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), // Seta para voltar preta
+      ),
+      
+      /*
+      appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
         title: const Column(
@@ -123,6 +135,9 @@ class _SafetyTipsPageState extends State<SafetyTipsPage> {
           )
         ],
       ),
+      */
+
+
       body: Column(
         children: [
           // 1. BARRA DE PESQUISA FUNCIONAL

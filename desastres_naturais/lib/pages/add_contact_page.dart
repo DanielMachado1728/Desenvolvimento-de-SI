@@ -109,6 +109,18 @@ class _AddContactPageState extends State<AddContactPage> {
 
     return Scaffold(
       appBar: AppBar(
+        title: const Text(
+          'Novo Contato',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), // Deixa a setinha de voltar preta
+      ),
+
+      /*
+      appBar: AppBar(
         title: Text(
           isEditing ? 'Editar Contato' : 'Novo Contato',
           style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
@@ -117,6 +129,7 @@ class _AddContactPageState extends State<AddContactPage> {
         iconTheme: const IconThemeData(color: Colors.black87),
         elevation: 1,
       ),
+      */
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(

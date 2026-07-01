@@ -8,6 +8,10 @@ import 'package:geolocator/geolocator.dart';
 import '../services/map_marker_service.dart';
 import '../models/map_marker_model.dart';
 
+import 'dart:io'; 
+import 'package:image_picker/image_picker.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -126,9 +130,10 @@ class _MapPageState extends State<MapPage> {
             _getMarkerColor(marker.tipo),
           ),
           onTap: () {
-            if (souDono) {
-              _mostrarOpcoesDoMarcador(marker);      // Nova função
-              }
+            _mostrarDetalhesDoMarcador(marker); // mostra detalhes para todos agora
+            //if (souDono) {
+              //mostrarOpcoesDoMarcador(marker);      // Nova função
+              //}
             },
         );
       }).toSet();
@@ -140,7 +145,119 @@ class _MapPageState extends State<MapPage> {
   }
 
 
+  // Função que abre o painel para ver a foto e detalhes (e opções se for dono)
+  void _mostrarDetalhesDoMarcador(MapMarker marker) {
+    final user = FirebaseAuth.instance.currentUser;
+    final bool souDono = user != null && marker.usuarioId == user.uid;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white, // Mantendo a estética limpa
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView( // Para não dar erro de espaço na tela
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Título
+                Text(
+                  marker.tipo.toUpperCase(), 
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 15),
+
+                // A MÁGICA AQUI: Exibir a foto vinda do Supabase
+                if (marker.fotoUrl != null && marker.fotoUrl!.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      marker.fotoUrl!,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: CircularProgressIndicator(color: Colors.blueAccent)
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) => const SizedBox(
+                        height: 100, 
+                        child: Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey))
+                      ),
+                    ),
+                  ),
+                
+                const SizedBox(height: 15),
+
+                // Descrição em caixa cinza claro
+                if (marker.descricao.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      marker.descricao,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Botões de Gerenciar (Aparece SOMENTE para o dono)
+                if (souDono) ...[
+                  const Divider(),
+                  const Text("Gerenciar Alerta", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.edit, color: Colors.blueAccent),
+                    title: const Text("Editar Informações", style: TextStyle(color: Colors.black87)),
+                    onTap: () {
+                      Navigator.pop(context); 
+                      _abrirEdicao(marker);  
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.delete, color: Colors.redAccent),
+                    title: const Text("Remover Alerta", style: TextStyle(color: Colors.black87)),
+                    onTap: () async {
+                      Navigator.pop(context); 
+                      await _markerService.deactivateMarker(marker.id);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Alerta removido do mapa.")),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
   // Função que abre o menu de Gerenciar Alerta (Editar/Excluir)
+  // Função usada antes do supabase
+
+
+/*
   void _mostrarOpcoesDoMarcador(MapMarker marker) {
     showModalBottomSheet(
       context: context,
@@ -184,6 +301,7 @@ class _MapPageState extends State<MapPage> {
       },
     );
   }
+*/
 
   // Função que abre o formulário preenchido
   void _abrirEdicao(MapMarker marker) {
@@ -196,7 +314,7 @@ class _MapPageState extends State<MapPage> {
         tipoInicial: marker.tipo,           // Passa dados atuais
         descricaoInicial: marker.descricao, // Passa dados atuais
         isEditing: true,                    // Avisa que é edição
-        onSalvar: (novoTipo, novaDesc, _) async {
+        onSalvar: (novoTipo, novaDesc, _, imageUrl) async {
           // Chama o update no service
           await _markerService.updateMarker(marker.id, novoTipo, novaDesc);
           if (mounted) {
@@ -272,7 +390,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   
-  // --- Fluxo de criar alerta (Seu código original mantido) ---
+  // --- Fluxo de criar alerta (código original mantido) ---
 
   void _iniciarSelecaoLocal() {
     setState(() {
@@ -297,7 +415,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Future<void> _salvarNoFirebase(String tipo, String descricao, LatLng local) async {
+  Future<void> _salvarNoFirebase(String tipo, String descricao, LatLng local, String? imageUrl) async {
     final dataCriacao = DateTime.now();
     final dataExpiracao = dataCriacao.add(const Duration(hours: 48));
     final user = FirebaseAuth.instance.currentUser; // Pegando usuário real
@@ -310,7 +428,8 @@ class _MapPageState extends State<MapPage> {
       criadoEm: dataCriacao,
       expiraEm: dataExpiracao, 
       ativo: true,
-      usuarioId: user?.uid ?? 'anonimo', 
+      usuarioId: user?.uid ?? 'anonimo',
+      fotoUrl: imageUrl,
     );
 
     try {
@@ -343,6 +462,19 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text(
+          'Mapa',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), // seta para voltar 
+      ),
+      
+      
+      /*
+      appBar: AppBar(
         title: Text(_isSelectingLocation ? 'Escolha o Local' : 'Mapa'),
         backgroundColor: _isSelectingLocation ? Colors.orange : Colors.white, 
         elevation: 0,
@@ -358,7 +490,8 @@ class _MapPageState extends State<MapPage> {
             )
           : null,
       ),
-      
+      */
+
       body: Stack(
         children: [
           GoogleMap(
@@ -402,13 +535,45 @@ class _MapPageState extends State<MapPage> {
         onPressed: _isSelectingLocation 
             ? _confirmarLocalEabrirFormulario 
             : _iniciarSelecaoLocal,
+        // 1. Aumentamos a letra, deixamos em negrito e com bom espaçamento
+        label: Text(
+          _isSelectingLocation ? 'CONFIRMAR AQUI' : 'COMPARTILHAR EVENTO',
+          style: const TextStyle(
+            fontSize: 20, // <-- Tamanho da fonte maior
+            fontWeight: FontWeight.bold, // <-- Letra mais grossa para leitura rápida
+            letterSpacing: 1.1,
+            color: Colors.white, // <-- Garante contraste perfeito
+          ),
+        ),
+        // 2. Aumentamos o ícone para ficar proporcional ao texto
+        icon: Icon(
+          _isSelectingLocation ? Icons.check : Icons.add_alert,
+          size: 28, // <-- Ícone maior
+          color: Colors.white,
+        ),
+        backgroundColor: _isSelectingLocation ? Colors.green : Colors.redAccent,
+        elevation: 6, // <-- Sombra um pouco maior para o botão "saltar" na tela
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+
+
+      /*
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isSelectingLocation 
+            ? _confirmarLocalEabrirFormulario 
+            : _iniciarSelecaoLocal,
         label: Text(_isSelectingLocation ? 'CONFIRMAR AQUI' : 'COMPARTILHAR EVENTO'),
         icon: Icon(_isSelectingLocation ? Icons.check : Icons.add_alert),
         backgroundColor: _isSelectingLocation ? Colors.green : Colors.redAccent,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      */
+
+
+
     );
   }
+      
 
   double _getMarkerColor(String tipo) {
     switch (tipo.toLowerCase()) {
@@ -424,7 +589,8 @@ class _MapPageState extends State<MapPage> {
 // Widget do formulário 
 class _FormularioAlerta extends StatefulWidget {
   final LatLng localizacao;
-  final Function(String, String, LatLng) onSalvar;
+  // final Function(String, String, LatLng) onSalvar;
+  final Function(String, String, LatLng, String?) onSalvar; // String? foi adicionado no final
 
   final String? tipoInicial;
   final String? descricaoInicial;
@@ -446,6 +612,8 @@ class _FormularioAlerta extends StatefulWidget {
 
 class _FormularioAlertaState extends State<_FormularioAlerta> {
   final _descController = TextEditingController();
+  File? _imagemSelecionada;
+  bool _isLoading = false;
   //String _tipoSelecionado = 'alagamento'; codigo antigo
 
 
@@ -468,6 +636,62 @@ class _FormularioAlertaState extends State<_FormularioAlerta> {
     {'valor': 'abrigo', 'label': 'Abrigo Seguro', 'icon': Icons.home, 'cor': Colors.green},
     {'valor': 'base_apoio', 'label': 'Ponto de Apoio', 'icon': Icons.local_hospital, 'cor': Colors.orange},
   ];
+
+  Future<void> _tirarFoto() async {
+    final picker = ImagePicker();
+    final foto = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+    if (foto != null) setState(() => _imagemSelecionada = File(foto.path));
+  }
+
+//PARTE ANTIGA
+/*
+  Future<String?> _fazerUpload() async {
+  if (_imagemSelecionada == null) return null;
+  final nomeArquivo = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+  
+  await Supabase.instance.client.storage
+      .from('fotos_alertas')
+      .uploadBinary(nomeArquivo, await _imagemSelecionada!.readAsBytes());
+      
+  return Supabase.instance.client.storage.from('fotos_alertas').getPublicUrl(nomeArquivo);
+}
+*/
+
+Future<String?> _fazerUpload() async {
+    if (_imagemSelecionada == null) return null;
+    
+    try {
+      print('1. Iniciando processo de upload...');
+      final nomeArquivo = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      
+      print('2. Lendo a imagem como bytes...');
+      final bytes = await _imagemSelecionada!.readAsBytes();
+      
+      print('3. Enviando para o Supabase...');
+      await Supabase.instance.client.storage
+          .from('fotos_alertas')
+          .uploadBinary(nomeArquivo, bytes);
+          
+      print('4. Pegando o link público...');
+      final link = Supabase.instance.client.storage.from('fotos_alertas').getPublicUrl(nomeArquivo);
+      
+      print('5. Sucesso! Link gerado: $link');
+      return link;
+      
+    } catch (e) {
+      print('ERRO CAPTURADO NO TRY/CATCH: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro no Supabase: $e'), backgroundColor: Colors.red),
+        );
+      }
+      return null;
+    }
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -544,6 +768,82 @@ class _FormularioAlertaState extends State<_FormularioAlerta> {
 
           const SizedBox(height: 20),
 
+
+          // codigo novo da camera
+          if (!widget.isEditing) 
+            InkWell(
+              onTap: _tirarFoto,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.blueAccent.withOpacity(0.5)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _imagemSelecionada == null ? Icons.camera_alt : Icons.check_circle, 
+                      color: Colors.blueAccent
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      _imagemSelecionada == null ? "Anexar Foto do Local" : "Foto Anexada (Toque para trocar)",
+                      style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+          if (_imagemSelecionada != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.file(_imagemSelecionada!, height: 120, fit: BoxFit.cover),
+              ),
+            ),
+          const SizedBox(height: 20),
+          // novo até aqui
+
+
+
+          ElevatedButton(
+            onPressed: _isLoading 
+                ? null 
+                : () async {
+                    setState(() => _isLoading = true); // Mostra o carregando
+                    
+                    // Sobe a foto e pega o link
+                    String? linkDaFoto = await _fazerUpload(); 
+                    
+                    // Chama a função principal passando o link da foto junto
+                    widget.onSalvar(
+                      _tipoSelecionado, 
+                      _descController.text, 
+                      widget.localizacao,
+                      linkDaFoto
+                    );
+                  },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: _isLoading 
+                ? const SizedBox(
+                    height: 20, 
+                    width: 20, 
+                    child: CircularProgressIndicator(strokeWidth: 2)
+                  )
+                : Text(
+                    widget.isEditing ? "ATUALIZAR ALERTA" : "SALVAR ALERTA", 
+                    style: const TextStyle(fontSize: 16)
+                  ),
+          ),
+/* antigo antes das fotos
           ElevatedButton(
             onPressed: () {
               widget.onSalvar(
@@ -561,17 +861,15 @@ class _FormularioAlertaState extends State<_FormularioAlerta> {
             child: Text(widget.isEditing ? "ATUALIZAR ALERTA" : "SALVAR ALERTA", style: const TextStyle(fontSize: 16)),
 
           ),
+*/
+
+
+
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 }
-
-
-
-
-
-
 
 

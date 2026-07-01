@@ -9,6 +9,7 @@ class MapMarker {
   final DateTime? expiraEm;
   final bool ativo;
   final String usuarioId;
+  final String? fotoUrl;
 
   MapMarker({
     required this.id,
@@ -19,6 +20,7 @@ class MapMarker {
     this.expiraEm,
     required this.ativo,
     required this.usuarioId,
+    this.fotoUrl,
   });
 
   factory MapMarker.fromFirestore(DocumentSnapshot doc) {
@@ -43,6 +45,7 @@ class MapMarker {
           
       ativo: data['ativo'] ?? true,
       usuarioId: data['usuarioId'] ?? 'anonimo',
+      fotoUrl: data['fotoUrl'],
     );
   }
 
@@ -55,6 +58,7 @@ class MapMarker {
       'expiraEm': expiraEm != null ? Timestamp.fromDate(expiraEm!) : null,
       'ativo': ativo,
       'usuarioId': usuarioId,
+      'fotoUrl': fotoUrl,
     };
   }
 }

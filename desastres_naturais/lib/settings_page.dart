@@ -201,8 +201,23 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), 
+      ),
+
+      
+      /*
+      appBar: AppBar(
+        title: const Text(
+          'Meu Perfil',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
+      */
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : SingleChildScrollView(

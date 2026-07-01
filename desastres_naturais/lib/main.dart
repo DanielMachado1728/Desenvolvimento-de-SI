@@ -4,6 +4,7 @@ import 'home_page.dart';
 import 'firebase_options.dart';
 import 'login_page.dart';
 import 'pages/add_contact_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 
@@ -11,6 +12,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, 
+  );
+  await Supabase.initialize(
+    url: 'https://oerwzlwosetymeixtdva.supabase.co',
+    anonKey: 'sb_publishable_XSDYydtMa4FWuNejvxxjFQ_HNmrt3fr',
   );
   runApp(const MyApp());
 }

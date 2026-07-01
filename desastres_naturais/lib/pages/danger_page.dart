@@ -140,6 +140,7 @@ class _DangerPageState extends State<DangerPage> {
 
     return Scaffold(
       backgroundColor: _alertActive ? Colors.deepPurple[50] : Colors.white,
+      /*
       appBar: AppBar(
         title: const Text('Emergência'),
         backgroundColor: _alertActive ? Colors.deepPurple[100] : Colors.white,
@@ -147,6 +148,18 @@ class _DangerPageState extends State<DangerPage> {
         iconTheme: const IconThemeData(color: Colors.black87),
         titleTextStyle: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20),
       ),
+      */
+      appBar: AppBar(
+        title: const Text(
+          'Emergência', 
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), // seta de voltar
+      ),
+      
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

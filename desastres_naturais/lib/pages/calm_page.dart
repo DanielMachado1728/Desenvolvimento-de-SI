@@ -362,7 +362,22 @@ class CalmPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Preciso Me Acalmar')),
+
+      //appBar: AppBar(title: const Text('Preciso Me Acalmar')),
+
+
+      appBar: AppBar(
+        title: const Text(
+          'Preciso me acalmar', 
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87), // seta de voltar
+      ),
+
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
