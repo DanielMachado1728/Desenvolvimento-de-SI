@@ -12,6 +12,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/users_model.dart'; 
+
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -114,7 +116,9 @@ class _MapPageState extends State<MapPage> {
     _markerService.streamMarkers().listen((markersFromFirestore) {
       final user = FirebaseAuth.instance.currentUser; // adicionado
       final novosHazardMarkers = markersFromFirestore.map((marker) {
-        final bool souDono = user != null && marker.usuarioId == user.uid; //adicionado
+        final bool souDono = user != null && marker.autor.id == user.uid; //mudança para OO
+        //final bool souDono = user != null && marker.usuarioId == user.uid; //linha vermelha antiga de erro 117 devido ao código estar mudando para OO
+
         return Marker(
           markerId: MarkerId(marker.id),
           position: LatLng(
@@ -148,7 +152,8 @@ class _MapPageState extends State<MapPage> {
   // Função que abre o painel para ver a foto e detalhes (e opções se for dono)
   void _mostrarDetalhesDoMarcador(MapMarker marker) {
     final user = FirebaseAuth.instance.currentUser;
-    final bool souDono = user != null && marker.usuarioId == user.uid;
+    final bool souDono = user != null && marker.autor.id == user.uid;
+    //final bool souDono = user != null && marker.usuarioId == user.uid;    //linha vermelha de erro 151
 
     showModalBottomSheet(
       context: context,
@@ -428,8 +433,13 @@ class _MapPageState extends State<MapPage> {
       criadoEm: dataCriacao,
       expiraEm: dataExpiracao, 
       ativo: true,
-      usuarioId: user?.uid ?? 'anonimo',
       fotoUrl: imageUrl,
+      autor: Usuario(
+        id: user?.uid ?? 'anonimo',
+        nome: user?.displayName ?? 'Usuário',
+        email: user?.email ?? '',
+      ),
+      //usuarioId: user?.uid ?? 'anonimo',
     );
 
     try {

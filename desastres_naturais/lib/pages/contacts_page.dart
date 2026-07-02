@@ -59,9 +59,9 @@ class _ContactsPageState extends State<ContactsPage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    // Tema Amarelo solicitado
+    // Tema Amarelo
     final Color primaryColor = Colors.amber[900]!; 
-    final Color headerColor = Colors.amber;
+    final Color headerColor = Colors.amber.shade500;  
 
     if (user == null) {
       return const Center(child: Text('Usuário não autenticado.'));

@@ -166,9 +166,6 @@ class HomePage extends StatelessWidget {
 
 
 
-
-
-
 /*
 import 'package:flutter/material.dart';
 import 'pages/danger_page.dart';

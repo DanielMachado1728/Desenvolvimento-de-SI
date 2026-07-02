@@ -124,12 +124,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _pickBirthDate() async {
-    final now = DateTime.now();
+    final now = DateTime.now();  //erro aqui 127
     final picked = await showDatePicker(
       context: context,
       initialDate: _birthDate ?? DateTime(2000),
       firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      //lastDate: DateTime.now(),
+      lastDate: now,
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
